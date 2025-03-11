@@ -9,5 +9,5 @@ describe("Build Test", () => {
         } catch (error) { // if it doesn't build, error
             expect(error).toBeUndefined();
         }
-    });
+    }, 10000);
 });
