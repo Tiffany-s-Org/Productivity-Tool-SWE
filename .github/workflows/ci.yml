@@ -11,23 +11,21 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest  # You can change the OS to 'windows-latest' or 'macos-latest'
-
+    runs-on: windows-latest
     steps:
-      # Step 1: Checkout the code
-      - name: Checkout code
-        uses: actions/checkout@v2
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-      # Step 2: Set up the environment (Node.js example)
-      - name: Set up Node.js
-        uses: actions/setup-node@v2
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
         with:
-          node-version: '14'
+          node-version: 23.9.0
 
-      # Step 3: Install dependencies
       - name: Install dependencies
-        run: npm install
+        run: cd organAIze && npm install
 
-      # Step 4: Run tests
       - name: Run tests
-        run: npm test
+        run: cd organAIze && npm test
+
+      - name: Start Development Server
+        run: cd organAIze && npm run dev
