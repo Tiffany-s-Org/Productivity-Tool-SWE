@@ -24,6 +24,9 @@ jobs:
       - name: Install dependencies
         run: cd organAIze && npm install
 
+      - name: Install Backend dependencies
+        run: nmp install express && npm install hbs && npm install mongoose && npm install nodemon 
+
       - name: Install Vitest
         run: |
           cd organAIze
