@@ -34,5 +34,6 @@ jobs:
           cd organAIze
           npm test || echo "No tests found, skipping (for now)..."
 
-      - name: Start Development Server
-        run: cd organAIze && npm run dev
+      # github will be constantly running the dev server if this is uncommented
+      #- name: Start Development Server
+      #  run: cd organAIze && npm run dev
