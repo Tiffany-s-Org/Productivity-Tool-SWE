@@ -17,6 +17,10 @@ function App() {
     }
   };
 
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+  };
+
   const handleRegister = (username: string, email: string, password: string) => {
     // Here you would typically send registration data to your backend
     console.log("Registering:", username, email, password);
@@ -38,7 +42,7 @@ function App() {
         />
         <Route
           path="/calendar"
-          element={isAuthenticated ? <CalendarPage /> : <Navigate to="/" />}
+          element={isAuthenticated ? <CalendarPage onLogout={handleLogout} /> : <Navigate to="/" />}
         />
       </Routes>
     </Router>
