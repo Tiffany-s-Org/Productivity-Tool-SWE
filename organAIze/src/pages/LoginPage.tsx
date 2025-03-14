@@ -15,7 +15,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-100">
-      <div className="w-full max-w-md rounded-lg bg-white p-8 shadow-lg">
+      <div className="w-full max-w-sm rounded-lg bg-white p-8 shadow-lg">
         <h2 className="mb-6 text-center text-2xl font-semibold text-gray-700">Login</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <input

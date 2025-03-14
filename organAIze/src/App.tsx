@@ -11,7 +11,8 @@ function App() {
     if (username === "user" && password === "password") {
       setIsAuthenticated(true);
     } else {
-      alert("Invalid username or password");
+      //for now, just let authenticated be true
+      setIsAuthenticated(true);
     }
   };
 
