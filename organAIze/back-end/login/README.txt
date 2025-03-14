@@ -12,5 +12,6 @@
 
 --Our data is in login-data > users--
 
+Changes or additions to the database have an immediate effect, though it may not be visually reflected on Compass. To see these additions or changes immediately, click the refresh icon on Compass.
 
 
