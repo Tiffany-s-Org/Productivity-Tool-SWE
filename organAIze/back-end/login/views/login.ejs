@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+</head>
+<body>
+
+<div class="form-container">
+    <h2>Login</h2>
+    <form action="/login" method="post">
+
+        <div class="form-info">
+            <label for="username">Username/Email:</label>
+            <input type="text" id="username" name="username" placeholder="Click Here">
+        </div>
+
+        <div class="form-info">
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" placeholder="Click Here">
+        </div>
+
+        <button id="btn-login">Login</button>
+        <p id="login-message"></p>
+    </form>
+
+    <p>Don't have an account? <a class="link" href="/signup">Signup!</a></p>
+    <p>Forgot your password Again? <a class="link" href="/password">Reset Password!</a></p>
+</div>
+
+<!--
+Some things you can style using CSS:
+- .form-container  (Main container for the form)
+- .form-info       (input fields that take in text)
+- #btn-login       (Login button)
+- #login-message   (Message displayed before redirecting after login)
+-->
