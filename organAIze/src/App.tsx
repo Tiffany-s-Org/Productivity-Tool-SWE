@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import LoginPage from "./pages/LoginPage";
 import CalendarPage from "./pages/CalendarPage";
+import RegisterPage from "./pages/RegisterPage";
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -16,12 +17,24 @@ function App() {
     }
   };
 
+  const handleRegister = (username: string, email: string, password: string) => {
+    // Here you would typically send registration data to your backend
+    console.log("Registering:", username, email, password);
+    
+    // For now, automatically authenticate after registration
+    setIsAuthenticated(true);
+  };
+
   return (
     <Router>
       <Routes>
         <Route
           path="/"
           element={!isAuthenticated ? <LoginPage onLogin={handleLogin} /> : <Navigate to="/calendar" />}
+        />
+        <Route
+          path="/register"
+          element={!isAuthenticated ? <RegisterPage onRegister={handleRegister} /> : <Navigate to="/calendar" />}
         />
         <Route
           path="/calendar"
