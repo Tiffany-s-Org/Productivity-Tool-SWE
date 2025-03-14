@@ -25,7 +25,9 @@ jobs:
         run: cd organAIze && npm install
 
       - name: Install Backend dependencies
-        run: cd /backend/login && npm install
+        run: |
+          cd organAIze && npm install
+          cd /backend/login && npm install express && npm install ejs && npm install mongoose && npm install bcrypt && npm install nodemon
 
       - name: Install Vitest
         run: |
