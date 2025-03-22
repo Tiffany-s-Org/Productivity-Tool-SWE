@@ -1,5 +1,8 @@
 {
   "devDependencies": {
     "typescript": "^5.8.2"
+  },
+  "dependencies": {
+    "react-calendar": "^5.1.0"
   }
 }
