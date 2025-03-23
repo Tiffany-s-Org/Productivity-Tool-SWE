@@ -21,16 +21,16 @@ jobs:
         with:
           node-version: 23.9.0
 
+      - name: Install Vitest
+        run: |
+          cd organAIze
+          npm install --save-dev vitest
+
       - name: Install dependencies
         run: cd organAIze && npm install --legacy-peer-deps
 
       - name: Install Backend dependencies
         run: cd organAIze/back-end/login && npm install
-        
-      - name: Install Vitest
-        run: |
-          cd organAIze
-          npm install --save-dev vitest
 
       - name: Run tests
         run: |
