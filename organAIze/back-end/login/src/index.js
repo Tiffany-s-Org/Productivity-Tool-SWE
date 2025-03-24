@@ -52,27 +52,13 @@ app.post("/signup", async (req, res) => {
 
 app.post("/login", async (req, res) => {
     try {
-        //Check if username exists
-        let user = await collection.findOne({username:req.body.username});
-
-        if (!user) {
-            //if username doesn't exist, check if email was input instead
-            user = await collection.findOne({email:req.body.username});
-            if (!user) {
-                return res.json({message:"username/password incorrect"});
-            }
-        }
-
-        //Check password
-        const passwordIsCorrect = await bcrypt.compare(req.body.password, user.password);
-        if (passwordIsCorrect) {return res.render("home");}
-        else {return res.json({message:"password is incorrect"});}
+      const user = await loginUser(req.body.username, req.body.password); // Use the loginUser function
+      return res.render("home"); // Assume user login is successful and home page is rendered
+    } catch (error) {
+      console.error(error);
+      res.json({ message: error.message });
     }
-    catch (error){
-        console.error(error);
-        res.json({message:"Something went wrong :("});
-    }
-});
+  });
 
 //in the future, you should only be allowed to access this page after user gets an email requesting to change password.
 app.post("/password", async (req, res) => {

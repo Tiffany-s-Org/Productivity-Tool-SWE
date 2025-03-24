@@ -1,20 +1,25 @@
-/*import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import mongoose from 'mongoose';
 import bcrypt from 'bcrypt';
-import { loginUser, UserModel } from './path-to-your-auth-module'; // Adjust imports accordingly
+
+// Using require for the imports instead of ES module imports
+const { UserModel } = require('../back-end/login/src/config');
+const { loginUser } = require('../back-end/login/src/auth-module');
 
 // Setup MongoDB connection for testing
 const dbUri = 'mongodb://localhost:27017/testdb'; // Test DB URI
 let userId: string;
+let passwordHash: string;
 
 beforeAll(async () => {
   // Connect to MongoDB for testing
   await mongoose.connect(dbUri);
 
   // Create a user for login tests
-  const passwordHash = await bcrypt.hash('password123', 10); // Assuming you're hashing passwords
+  passwordHash = await bcrypt.hash('password123', 10); // Hash the password
   const user = new UserModel({
     username: 'testuser',
+    email: 'testuser@example.com',
     password: passwordHash,
   });
 
@@ -28,27 +33,31 @@ afterAll(async () => {
   await mongoose.connection.close();
 });
 
-describe('User login functionality', () => {
-  it('should successfully log in with correct credentials', async () => {
-    const credentials = { username: 'testuser', password: 'password123' };
-    const loginResult = await loginUser(credentials); // Assuming loginUser is a function you implemented
-    
-    expect(loginResult).toBeTruthy(); // Adjust this according to your login function's return
-    expect(loginResult.user).toBeDefined();
-    expect(loginResult.user.username).toBe('testuser');
+describe('loginUser function', () => {
+  it('should successfully login a user with the correct username and password', async () => {
+    const user = await loginUser('testuser', 'password123'); // Using the loginUser function
+    expect(user).toBeDefined();
+    expect(user.username).toBe('testuser');
+    expect(user.email).toBe('testuser@example.com');
   });
 
-  it('should fail to log in with incorrect password', async () => {
-    const credentials = { username: 'testuser', password: 'wrongpassword' };
-    const loginResult = await loginUser(credentials);
-
-    expect(loginResult).toBeFalsy(); // Your login function should return false or null on failure
+  it('should throw an error for incorrect username or password', async () => {
+    try {
+      await loginUser('testuser', 'wrongpassword');
+    } catch (error: unknown) {
+      // Type assertion to Error type
+      const e = error as Error;
+      expect(e.message).toBe('password is incorrect');
+    }
   });
 
-  it('should fail to log in with a non-existent user', async () => {
-    const credentials = { username: 'nonexistentuser', password: 'password123' };
-    const loginResult = await loginUser(credentials);
-
-    expect(loginResult).toBeFalsy(); // Your login function should return false or null on failure
+  it('should throw an error if the username does not exist', async () => {
+    try {
+      await loginUser('nonexistentuser', 'password123');
+    } catch (error: unknown) {
+      // Type assertion to Error type
+      const e = error as Error;
+      expect(e.message).toBe('username/password incorrect');
+    }
   });
-});*/
+});
