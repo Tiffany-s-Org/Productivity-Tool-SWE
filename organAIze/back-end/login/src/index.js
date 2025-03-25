@@ -1,19 +1,52 @@
 const express = require('express');
-//const path = require('path');
 const bcrypt = require('bcrypt');
-const collection = require("./config");
+const { collection, userAuthCollection } = require("./config");
+const session = require("express-session");
+const nodemailer = require("nodemailer");
+require('dotenv').config();
 
 const app = express();
 
 //convert data into json format
 app.use(express.json());
-app.use(express.urlencoded({extended:false}));
+app.use(express.urlencoded({extended:true}));
 
-//use EJS as the view engine
+function sendOTP(email, passcode){
+    console.log("Entered sendOTP()");
+
+    const transporter = nodemailer.createTransport({
+        host: process.env.GMAIL_HOST,
+        port: 587,
+        secure: false,
+        auth: {
+            user: process.env.GMAIL_USER,
+            pass: process.env.GMAIL_PASS
+        },
+    });
+
+    let mailOptions = {
+        from: process.env.GMAIL_USER,
+        to: email,
+        subject: "Your OTP Code",
+        text: `Your OTP code is: ${passcode}`
+    };
+
+    transporter.sendMail(mailOptions, (err, info) => {
+        if (err) {
+            console.log(err);
+        } else {
+            console.log('Email sent: ' + info.response);
+        }
+    });
+}
+
+app.use(session({
+    secret: "super-secret-key",
+    resave: false,
+    saveUninitialized: true
+}));
+
 app.set('view engine', 'ejs');
-
-//use could use this to link your CSS files onto the backend if you want
-//app.use(express.static("public"));
 
 app.get("/", (req, res) => {
     res.render("login");
@@ -24,11 +57,47 @@ app.get("/signup", (req, res) => {
 });
 
 app.get("/password", (req, res) => {
-   res.render("password");
+    res.render("password");
 });
 
+app.get("/home", (req, res) => {
+    res.render("home");
+})
+
+app.get("/otp", (req, res) => {
+    sendOTP(req.session.user.email, req.session.user.secretCode);
+    res.render("otp");
+});
+
+app.post("/otp", async (req, res) => {
+    const user = req.session.user;
+    if (user){ //check expiration date
+        const now = new Date();
+        if (now > user.expiresAt) {
+            await collection.deleteOne({email: user.email});
+            await userAuthCollection.deleteOne({userID: user.userID});
+            return res.json({ message: "Code has expired - please register again." });
+        }
+
+        //update secretCode if user requests change
+        if (user.secretCode === parseInt(req.body.secretCode, 10)){ // otp-input
+            await collection.updateOne(
+                {email: user.email},
+                {$set: {verified:true}}
+            );
+            user.verified=true;
+            return res.redirect("/home");
+        } else {
+            console.log(user.secretCode);
+            console.log(req.body.secretCode);
+            res.json({message:"code is incorrect - try again"});
+        }
+    } else {return res.redirect("/signup");}
+});
+
+
 app.post("/signup", async (req, res) => {
-    const data = {username:req.body.username, email:req.body.email, password: req.body.password};
+    const data = {username:req.body.username, email:req.body.email, password: req.body.password, verified: false};
 
     //check if user already exists
     const existingUser = await collection.findOne({username:data.username});
@@ -42,23 +111,60 @@ app.post("/signup", async (req, res) => {
         return res.json({message:"Email already exists - try changing your password idiot!"});
     }
 
-    //hash the password using bcrypt
     data.password = await bcrypt.hash(data.password, 10);
-    //save data
     const userData = await collection.insertOne(data);
     console.log(userData);
-    return res.json({message:"Registration successful!"});
+
+
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
+    const passcode = Math.floor(Math.random() * 10000);
+
+    const userAuthData = await userAuthCollection.insertOne({
+        userID: userData._id,
+        createdAt: new Date(),
+        expiresAt: expiresAt,
+        secretCode: passcode
+    })
+    console.log(userAuthData);
+
+    req.session.user = {email: data.email, secretCode: passcode };
+    req.session.save(() => {
+        res.redirect("/otp");
+    });
 });
 
 app.post("/login", async (req, res) => {
     try {
-      const user = await loginUser(req.body.username, req.body.password); // Use the loginUser function
-      return res.render("home"); // Assume user login is successful and home page is rendered
-    } catch (error) {
-      console.error(error);
-      res.json({ message: error.message });
+        //Check if username exists
+        let user = await collection.findOne({username:req.body.username});
+
+        if (!user) {
+            //if username doesn't exist, check if email was input instead
+            user = await collection.findOne({email:req.body.username});
+            if (!user) {
+                return res.json({message:"username/password incorrect"});
+            }
+        }
+
+        //Check password
+        const passwordIsCorrect = await bcrypt.compare(req.body.password, user.password);
+        if (!passwordIsCorrect) {return res.json({message:"password is incorrect"});}
+
+        //check if account is verified
+        if (user.verified){
+            return res.redirect("/home");
+        } else{
+            //display message that account exists but is not verified - redirect to OTP page
+            const passcode = Math.floor(Math.random() * 10000);
+            req.session.user = {email: user.email, secretCode: passcode};
+            res.redirect("/otp");
+        }
     }
-  });
+    catch (error){
+        console.error(error);
+        res.json({message:"Something went wrong :("});
+    }
+});
 
 //in the future, you should only be allowed to access this page after user gets an email requesting to change password.
 app.post("/password", async (req, res) => {
