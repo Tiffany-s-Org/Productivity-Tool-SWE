@@ -1,6 +1,6 @@
 const express = require('express');
 const bcrypt = require('bcrypt');
-const { collection, userAuthCollection } = require("./config");
+const { collection, userAuthCollection } = require("../config");
 const session = require("express-session");
 const nodemailer = require("nodemailer");
 require('dotenv').config();

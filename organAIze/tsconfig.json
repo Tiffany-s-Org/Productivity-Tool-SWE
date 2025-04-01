@@ -3,7 +3,7 @@
     "outDir": "./dist",
     "target": "esnext",
     "module": "esnext",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
@@ -14,11 +14,11 @@
     "declarationDir": "./dist/types"
   },
   "include": [
-    "src/**/*.ts",
-    "src/**/*.tsx",
-    "tests/**/*.ts",
-    "tests/**/*.tsx"
-  ],
+    "client/**/*.ts",
+    "client/**/*.tsx",
+    "client/tests/**/*.ts",
+    "client/tests/**/*.tsx"
+, "vite.config.ts", "vite.config.ts"  ],
   "exclude": [
     "node_modules",
     "dist"
