@@ -1,4 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
+import Calendar from 'react-calendar';
+import 'react-calendar/dist/Calendar.css';
 
 interface User {
   id: string;
@@ -12,6 +14,8 @@ interface HomePageProps {
 }
 
 const HomePage: React.FC<HomePageProps> = ({ user, onLogout }) => {
+  const [date, setDate] = useState<Date | [Date, Date]>(new Date());
+
   return (
     <div className="min-h-screen bg-gray-100">
       {/* Header/Navigation */}
@@ -51,6 +55,30 @@ const HomePage: React.FC<HomePageProps> = ({ user, onLogout }) => {
                 <span className="rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800">
                   Verified
                 </span>
+              </p>
+            </div>
+          </div>
+          
+          {/* Calendar Section */}
+          <div className="mb-8 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+            <h3 className="mb-4 text-xl font-medium text-gray-800">
+              Calendar
+            </h3>
+            <div className="flex flex-col items-center">
+              <Calendar
+                onChange={(value) => setDate(value as Date | [Date, Date])}
+                value={date}
+                tileClassName={({ date }) => {
+                  const day = date.getDay();
+                  if (day === 0 || day === 6) return '!text-blue-500';
+                  return 'text-blue-500';
+                }}
+              />
+              <p className="mt-4 text-gray-600">
+                Selected Date:{' '}
+                {date instanceof Date
+                  ? date.toDateString()
+                  : `${date[0].toDateString()} → ${date[1].toDateString()}`}
               </p>
             </div>
           </div>
