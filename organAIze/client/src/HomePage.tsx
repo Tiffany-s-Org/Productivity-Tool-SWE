@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
-import Calendar from 'react-calendar';
-import 'react-calendar/dist/Calendar.css';
+import React from 'react';
+import { ContinuousCalendar } from './ContinousCalendar';
 
 interface User {
   id: string;
@@ -14,7 +13,9 @@ interface HomePageProps {
 }
 
 const HomePage: React.FC<HomePageProps> = ({ user, onLogout }) => {
-  const [date, setDate] = useState<Date | [Date, Date]>(new Date());
+  const handleDateClick = (day: number, month: number, year: number) => {
+    console.log(`Selected date: ${day}/${month + 1}/${year}`);
+  };
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -64,22 +65,8 @@ const HomePage: React.FC<HomePageProps> = ({ user, onLogout }) => {
             <h3 className="mb-4 text-xl font-medium text-gray-800">
               Calendar
             </h3>
-            <div className="flex flex-col items-center">
-              <Calendar
-                onChange={(value) => setDate(value as Date | [Date, Date])}
-                value={date}
-                tileClassName={({ date }) => {
-                  const day = date.getDay();
-                  if (day === 0 || day === 6) return '!text-blue-500';
-                  return 'text-blue-500';
-                }}
-              />
-              <p className="mt-4 text-gray-600">
-                Selected Date:{' '}
-                {date instanceof Date
-                  ? date.toDateString()
-                  : `${date[0].toDateString()} → ${date[1].toDateString()}`}
-              </p>
+            <div className="h-screen max-h-[600px]">
+              <ContinuousCalendar onClick={handleDateClick} />
             </div>
           </div>
           
