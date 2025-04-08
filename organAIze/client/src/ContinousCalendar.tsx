@@ -5,8 +5,15 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
+interface Event {
+  id: string;
+  title: string;
+  description: string;
+  date: Date;
+}
+
 interface ContinuousCalendarProps {
-  onClick?: (_day:number, _month: number, _year: number) => void;
+  onClick?: (_day: number, _month: number, _year: number) => void;
 }
 
 export const ContinuousCalendar: React.FC<ContinuousCalendarProps> = ({ onClick }) => {
@@ -14,6 +21,15 @@ export const ContinuousCalendar: React.FC<ContinuousCalendarProps> = ({ onClick 
   const dayRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [year, setYear] = useState<number>(new Date().getFullYear());
   const [selectedMonth, setSelectedMonth] = useState<number>(0);
+  const [showEventModal, setShowEventModal] = useState<boolean>(false);
+  const [showTodoListModal, setShowTodoListModal] = useState<boolean>(false);
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [events, setEvents] = useState<Event[]>([]);
+  const [newEvent, setNewEvent] = useState({
+    title: '',
+    description: '',
+  });
+  
   const monthOptions = monthNames.map((month, index) => ({ name: month, value: `${index}` }));
 
   const scrollToDay = (monthIndex: number, dayIndex: number) => {
@@ -63,13 +79,87 @@ export const ContinuousCalendar: React.FC<ContinuousCalendarProps> = ({ onClick 
   };
 
   const handleDayClick = (day: number, month: number, year: number) => {
-    if (!onClick) { return; }
+    let selectedDate = new Date(year, month, day);
     if (month < 0) {
-      onClick(day, 11, year - 1);
-    } else {
-      onClick(day, month, year);
+      selectedDate = new Date(year - 1, 11, day);
     }
-  }
+    
+    setSelectedDate(selectedDate);
+    setShowTodoListModal(true);
+    
+    if (onClick) {
+      if (month < 0) {
+        onClick(day, 11, year - 1);
+      } else {
+        onClick(day, month, year);
+      }
+    }
+  };
+  
+  const handleAddEventClick = (e: React.MouseEvent, day: number, month: number, year: number) => {
+    e.stopPropagation(); // Stop propagation to prevent triggering the day click handler
+
+    let selectedDate = new Date(year, month, day);
+    if (month < 0) {
+      selectedDate = new Date(year - 1, 11, day);
+    }
+    
+    setSelectedDate(selectedDate);
+    setShowEventModal(true);
+  };
+  
+  const handleGlobalAddEventClick = () => {
+    setSelectedDate(new Date());
+    setShowEventModal(true);
+  };
+  
+  const handleCloseEventModal = () => {
+    setShowEventModal(false);
+    setNewEvent({ title: '', description: '' });
+  };
+
+  const handleCloseTodoListModal = () => {
+    setShowTodoListModal(false);
+  };
+  
+  const handleEventSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newEvent.title.trim() === '') return;
+    
+    const event: Event = {
+      id: Date.now().toString(),
+      title: newEvent.title,
+      description: newEvent.description,
+      date: selectedDate,
+    };
+    
+    setEvents([...events, event]);
+    setNewEvent({ title: '', description: '' });
+    setShowEventModal(false);
+  };
+  
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setNewEvent({ ...newEvent, [name]: value });
+  };
+
+  const hasEventOnDate = (day: number, month: number) => {
+    return events.some(event => {
+      const eventDate = event.date;
+      return eventDate.getDate() === day && eventDate.getMonth() === month && eventDate.getFullYear() === year;
+    });
+  };
+
+  const getEventsForDate = (day: number, month: number) => {
+    return events.filter(event => {
+      const eventDate = event.date;
+      return eventDate.getDate() === day && eventDate.getMonth() === month && eventDate.getFullYear() === year;
+    });
+  };
+
+  const deleteEvent = (eventId: string) => {
+    setEvents(events.filter(event => event.id !== eventId));
+  };
 
   const generateCalendar = useMemo(() => {
     const today = new Date();
@@ -116,6 +206,7 @@ export const ContinuousCalendar: React.FC<ContinuousCalendarProps> = ({ onClick 
           const index = weekIndex * 7 + dayIndex;
           const isNewMonth = index === 0 || calendarDays[index - 1].month !== month;
           const isToday = today.getMonth() === month && today.getDate() === day && today.getFullYear() === year;
+          const hasEvent = month >= 0 && hasEventOnDate(day, month);
 
           return (
             <div
@@ -134,7 +225,14 @@ export const ContinuousCalendar: React.FC<ContinuousCalendarProps> = ({ onClick 
                   {monthNames[month]}
                 </span>
               )}
-              <button type="button" className="absolute right-2 top-2 rounded-full opacity-0 transition-all focus:opacity-100 group-hover:opacity-100">
+              {hasEvent && (
+                <span className="absolute bottom-2 right-2 size-3 rounded-full bg-blue-500 sm:bottom-3 sm:right-3 sm:size-4 lg:size-5"></span>
+              )}
+              <button 
+                type="button" 
+                className="absolute right-2 top-2 rounded-full opacity-0 transition-all focus:opacity-100 group-hover:opacity-100"
+                onClick={(e) => handleAddEventClick(e, day, month, year)}
+              >
                 <svg className="size-8 scale-90 text-blue-500 transition-all hover:scale-100 group-focus:scale-100" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
                   <path fillRule="evenodd" d="M2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10S2 17.523 2 12Zm11-4.243a1 1 0 1 0-2 0V11H7.757a1 1 0 1 0 0 2H11v3.243a1 1 0 1 0 2 0V13h3.243a1 1 0 1 0 0-2H13V7.757Z" clipRule="evenodd"/>
                 </svg>
@@ -146,7 +244,7 @@ export const ContinuousCalendar: React.FC<ContinuousCalendarProps> = ({ onClick 
     ));
 
     return calendar;
-  }, [year]);
+  }, [year, events]);
 
   useEffect(() => {
     const calendarContainer = document.querySelector('.calendar-container');
@@ -187,7 +285,11 @@ export const ContinuousCalendar: React.FC<ContinuousCalendarProps> = ({ onClick 
             <button onClick={handleTodayClick} type="button" className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-900 hover:bg-gray-100 lg:px-5 lg:py-2.5">
               Today
             </button>
-            <button type="button" className="whitespace-nowrap rounded-lg bg-gradient-to-r from-cyan-500 to-blue-500 px-3 py-1.5 text-center text-sm font-medium text-white hover:bg-gradient-to-bl focus:outline-none focus:ring-4 focus:ring-cyan-300 sm:rounded-xl lg:px-5 lg:py-2.5">
+            <button 
+              type="button" 
+              className="whitespace-nowrap rounded-lg bg-gradient-to-r from-cyan-500 to-blue-500 px-3 py-1.5 text-center text-sm font-medium text-white hover:bg-gradient-to-bl focus:outline-none focus:ring-4 focus:ring-cyan-300 sm:rounded-xl lg:px-5 lg:py-2.5"
+              onClick={handleGlobalAddEventClick}
+            >
               + Add Event
             </button>
           </div>
@@ -222,6 +324,155 @@ export const ContinuousCalendar: React.FC<ContinuousCalendarProps> = ({ onClick 
       <div className="w-full px-5 pt-4 sm:px-8 sm:pt-6">
         {generateCalendar}
       </div>
+      
+      {/* Event Modal */}
+      {showEventModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-2xl/50">
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-xl font-semibold text-gray-900">
+                Add Event - {selectedDate.toLocaleDateString('en-US', { 
+                  weekday: 'long', 
+                  month: 'long', 
+                  day: 'numeric', 
+                  year: 'numeric' 
+                })}
+              </h3>
+              <button 
+                type="button" 
+                className="text-gray-400 hover:text-gray-500"
+                onClick={handleCloseEventModal}
+              >
+                <svg className="size-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+              </button>
+            </div>
+            <form onSubmit={handleEventSubmit}>
+              <div className="mb-4">
+                <label htmlFor="title" className="mb-2 block text-sm font-medium text-gray-700">
+                  Event Title
+                </label>
+                <input
+                  type="text"
+                  id="title"
+                  name="title"
+                  value={newEvent.title}
+                  onChange={handleInputChange}
+                  className="w-full rounded-lg border border-gray-300 p-2.5 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  placeholder="Enter event title"
+                  required
+                />
+              </div>
+              <div className="mb-4">
+                <label htmlFor="description" className="mb-2 block text-sm font-medium text-gray-700">
+                  Description
+                </label>
+                <textarea
+                  id="description"
+                  name="description"
+                  value={newEvent.description}
+                  onChange={handleInputChange}
+                  className="w-full rounded-lg border border-gray-300 p-2.5 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  rows={3}
+                  placeholder="Event description (optional)"
+                ></textarea>
+              </div>
+              <div className="flex justify-end gap-2">
+                <button
+                  type="button"
+                  className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                  onClick={handleCloseEventModal}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                >
+                  Save Event
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      
+      {/* Todo List Modal */}
+      {showTodoListModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-2xl/50">
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-xl font-semibold text-gray-900">
+                To-Do List - {selectedDate.toLocaleDateString('en-US', { 
+                  weekday: 'long', 
+                  month: 'long', 
+                  day: 'numeric', 
+                  year: 'numeric' 
+                })}
+              </h3>
+              <button 
+                type="button" 
+                className="text-gray-400 hover:text-gray-500"
+                onClick={handleCloseTodoListModal}
+              >
+                <svg className="size-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+              </button>
+            </div>
+            
+            <div className="mb-4">
+              <h4 className="mb-2 text-lg font-medium text-gray-700">Events for this day:</h4>
+              
+              {getEventsForDate(selectedDate.getDate(), selectedDate.getMonth()).length > 0 ? (
+                <ul className="space-y-2">
+                  {getEventsForDate(selectedDate.getDate(), selectedDate.getMonth()).map((event) => (
+                    <li key={event.id} className="rounded-lg border border-gray-200 p-3">
+                      <div className="flex items-center justify-between">
+                        <h5 className="font-medium text-gray-800">{event.title}</h5>
+                        <button 
+                          onClick={() => deleteEvent(event.id)}
+                          className="rounded-full p-1 text-red-500 hover:bg-red-50"
+                        >
+                          <svg className="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+                          </svg>
+                        </button>
+                      </div>
+                      {event.description && (
+                        <p className="mt-1 text-sm text-gray-600">{event.description}</p>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-gray-500">No events scheduled for this day.</p>
+              )}
+            </div>
+            
+            <div className="flex justify-between">
+              <button
+                type="button"
+                className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                onClick={handleCloseTodoListModal}
+              >
+                Close
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowTodoListModal(false);
+                  setShowEventModal(true);
+                }}
+                className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+              >
+                Add New Event
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
