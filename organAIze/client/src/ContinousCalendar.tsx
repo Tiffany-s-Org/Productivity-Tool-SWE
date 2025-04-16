@@ -2,6 +2,9 @@
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
+import moment from 'moment';
+import api from './axios-api';
+
 const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
@@ -10,6 +13,8 @@ interface Event {
   title: string;
   description: string;
   date: Date;
+  type: 'homework' | 'lecture/meetings' | 'general' | 'free time' | 'other';
+  time?: string;
 }
 
 interface ContinuousCalendarProps {
@@ -28,6 +33,8 @@ export const ContinuousCalendar: React.FC<ContinuousCalendarProps> = ({ onClick 
   const [newEvent, setNewEvent] = useState({
     title: '',
     description: '',
+    type: 'general',
+    time: '',
   });
   
   const monthOptions = monthNames.map((month, index) => ({ name: month, value: `${index}` }));
@@ -95,9 +102,9 @@ export const ContinuousCalendar: React.FC<ContinuousCalendarProps> = ({ onClick 
       }
     }
   };
-  
+
   const handleAddEventClick = (e: React.MouseEvent, day: number, month: number, year: number) => {
-    e.stopPropagation(); // Stop propagation to prevent triggering the day click handler
+    e.stopPropagation();
 
     let selectedDate = new Date(year, month, day);
     if (month < 0) {
@@ -115,33 +122,78 @@ export const ContinuousCalendar: React.FC<ContinuousCalendarProps> = ({ onClick 
   
   const handleCloseEventModal = () => {
     setShowEventModal(false);
-    setNewEvent({ title: '', description: '' });
+    setNewEvent({ title: '', description: '', type: 'general', time: '' });
   };
 
   const handleCloseTodoListModal = () => {
     setShowTodoListModal(false);
   };
-  
-  const handleEventSubmit = (e: React.FormEvent) => {
+
+  const handleEventSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (newEvent.title.trim() === '') return;
-    
-    const event: Event = {
-      id: Date.now().toString(),
-      title: newEvent.title,
-      description: newEvent.description,
-      date: selectedDate,
-    };
-    
-    setEvents([...events, event]);
-    setNewEvent({ title: '', description: '' });
-    setShowEventModal(false);
+
+    try {
+      // Format date to YYYY-MM-DD for backend
+      const formattedDate = selectedDate.toISOString().split('T')[0];
+
+      // Send request to backend
+      const response = await api.post('/tasks', {
+        name: newEvent.title,
+        description: newEvent.description,
+        type: newEvent.type as Event['type'],
+        time: newEvent.time,
+        date: formattedDate
+      });
+
+      if (response.data.success) {
+        // Create event for frontend display
+        const event: Event = {
+          id: Date.now().toString(),
+          title: newEvent.title,
+          description: newEvent.description,
+          date: moment(formattedDate).toDate(),
+          type: newEvent.type as Event['type'],
+          time: newEvent.time,
+        };
+
+        const updatedEvents = [...events, event];
+
+        // Sort events by time
+        updatedEvents.sort((a, b) => {
+          const aDate = a.date;
+          const bDate = b.date;
+
+          if (
+              aDate.getFullYear() === bDate.getFullYear() &&
+              aDate.getMonth() === bDate.getMonth() &&
+              aDate.getDate() === bDate.getDate()
+          ) {
+            const aTime = a.time ? moment(a.time, 'h:mm A') : moment('11:59 PM', 'h:mm A').add(1, 'minute');
+            const bTime = b.time ? moment(b.time, 'h:mm A') : moment('11:59 PM', 'h:mm A').add(1, 'minute');
+            return aTime.diff(bTime);
+          }
+
+          return aDate.getTime() - bDate.getTime();
+        });
+
+        setEvents(updatedEvents);
+        setNewEvent({ title: '', description: '', type: 'general', time: '' });
+        setShowEventModal(false);
+      }
+    } catch (error) {
+      console.error("Error saving task:", error);
+      alert("Failed to save task. Please try again.");
+    }
   };
-  
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+
+  const handleInputChange = (
+      e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
     const { name, value } = e.target;
-    setNewEvent({ ...newEvent, [name]: value });
+    setNewEvent((prev) => ({ ...prev, [name]: value }));
   };
+
 
   const hasEventOnDate = (day: number, month: number) => {
     return events.some(event => {
@@ -225,9 +277,35 @@ export const ContinuousCalendar: React.FC<ContinuousCalendarProps> = ({ onClick 
                   {monthNames[month]}
                 </span>
               )}
-              {hasEvent && (
-                <span className="absolute bottom-2 right-2 size-3 rounded-full bg-blue-500 sm:bottom-3 sm:right-3 sm:size-4 lg:size-5"></span>
+              {month >= 0 && getEventsForDate(day, month).length > 0 && (
+                  <div className="absolute bottom-1.5 left-1 right-1 space-y-0.5 overflow-hidden px-1 text-[10px] sm:text-xs lg:text-sm">
+                    {getEventsForDate(day, month)
+                        .slice(0, 3)
+                        .map((event) => {
+                          const colorMap: Record<Event['type'], string> = {
+                            homework: 'bg-red-500',
+                            'lecture/meetings': 'bg-yellow-500',
+                            general: 'bg-blue-500',
+                            'free time': 'bg-green-500',
+                            other: 'bg-purple-500',
+                          };
+
+                          return (
+                              <div
+                                  key={event.id}
+                                  className={`flex items-center gap-1 rounded px-1 py-0.5 text-white ${colorMap[event.type]} bg-opacity-90`}
+                              >
+                                {event.time && <span className="font-mono">{event.time}</span>}
+                                <span className="truncate">{event.type}</span>
+                              </div>
+                          );
+                        })}
+                    {getEventsForDate(day, month).length > 3 && (
+                        <div className="text-[10px] text-gray-400">+{getEventsForDate(day, month).length - 3} more</div>
+                    )}
+                  </div>
               )}
+
               <button 
                 type="button" 
                 className="absolute right-2 top-2 rounded-full opacity-0 transition-all focus:opacity-100 group-hover:opacity-100"
@@ -247,22 +325,66 @@ export const ContinuousCalendar: React.FC<ContinuousCalendarProps> = ({ onClick 
   }, [year, events]);
 
   useEffect(() => {
+    const fetchTasks = async () => {
+      try {
+        // Format date to YYYY-MM-DD for backend query
+        const formattedDate = selectedDate.toISOString().split('T')[0];
+
+        const response = await api.get(`/tasks?date=${formattedDate}`);
+
+        if (response.data.success) {
+          // Transform backend tasks to frontend events
+          const fetchedEvents = response.data.tasks.map((task: any) => ({
+            id: task._id,
+            title: task.name,
+            description: task.description || '',
+            date: moment(task.date, 'YYYY-MM-DD').toDate(),
+            type: task.type,
+            time: task.time
+          }));
+
+          fetchedEvents.sort((a: Event, b: Event) => {
+            const aDate = a.date;
+            const bDate = b.date;
+
+            if (
+                aDate.getFullYear() === bDate.getFullYear() &&
+                aDate.getMonth() === bDate.getMonth() &&
+                aDate.getDate() === bDate.getDate()
+            ) {
+              const aTime = a.time ? moment(a.time, 'h:mm A') : moment('11:59 PM', 'h:mm A').add(1, 'minute');
+              const bTime = b.time ? moment(b.time, 'h:mm A') : moment('11:59 PM', 'h:mm A').add(1, 'minute');
+              return aTime.diff(bTime);
+            }
+
+            return aDate.getTime() - bDate.getTime();
+          });
+
+          setEvents(fetchedEvents);
+        }
+      } catch (error) {
+        console.error("Error fetching tasks:", error);
+      }
+    };
+
+    if (selectedDate) fetchTasks();
+
     const calendarContainer = document.querySelector('.calendar-container');
 
     const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            const month = parseInt(entry.target.getAttribute('data-month')!, 10);
-            setSelectedMonth(month);
-          }
-        });
-      },
-      {
-        root: calendarContainer,
-        rootMargin: '-75% 0px -25% 0px',
-        threshold: 0,
-      },
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              const month = parseInt(entry.target.getAttribute('data-month')!, 10);
+              setSelectedMonth(month);
+            }
+          });
+        },
+        {
+          root: calendarContainer,
+          rootMargin: '-75% 0px -25% 0px',
+          threshold: 0,
+        },
     );
 
     dayRefs.current.forEach((ref) => {
@@ -274,7 +396,7 @@ export const ContinuousCalendar: React.FC<ContinuousCalendarProps> = ({ onClick 
     return () => {
       observer.disconnect();
     };
-  }, []);
+  }, [selectedDate]);
 
   return (
     <div className="no-scrollbar calendar-container max-h-full overflow-y-scroll rounded-t-2xl bg-white pb-10 text-slate-800 shadow-xl">
@@ -354,14 +476,14 @@ export const ContinuousCalendar: React.FC<ContinuousCalendarProps> = ({ onClick 
                   Event Title
                 </label>
                 <input
-                  type="text"
-                  id="title"
-                  name="title"
-                  value={newEvent.title}
-                  onChange={handleInputChange}
-                  className="w-full rounded-lg border border-gray-300 p-2.5 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  placeholder="Enter event title"
-                  required
+                    type="text"
+                    id="title"
+                    name="title"
+                    value={newEvent.title}
+                    onChange={handleInputChange}
+                    className="w-full rounded-lg border border-gray-300 p-2.5 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    placeholder="Enter event title"
+                    required
                 />
               </div>
               <div className="mb-4">
@@ -369,26 +491,84 @@ export const ContinuousCalendar: React.FC<ContinuousCalendarProps> = ({ onClick 
                   Description
                 </label>
                 <textarea
-                  id="description"
-                  name="description"
-                  value={newEvent.description}
-                  onChange={handleInputChange}
-                  className="w-full rounded-lg border border-gray-300 p-2.5 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  rows={3}
-                  placeholder="Event description (optional)"
+                    id="description"
+                    name="description"
+                    value={newEvent.description}
+                    onChange={handleInputChange}
+                    className="w-full rounded-lg border border-gray-300 p-2.5 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    rows={3}
+                    placeholder="Event description (optional)"
                 ></textarea>
               </div>
+
+              <div className="mb-4">
+                <label htmlFor="type" className="mb-2 block text-sm font-medium text-gray-700">
+                  Task Type
+                </label>
+                <select
+                    id="type"
+                    name="type"
+                    value={newEvent.type}
+                    onChange={handleInputChange}
+                    className="w-full rounded-lg border border-gray-300 p-2.5 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                >
+                  <option value="homework">Homework</option>
+                  <option value="lecture/meetings">Lecture / Meetings</option>
+                  <option value="general">General</option>
+                  <option value="free time">Free Time</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+
+              <div className="mb-4">
+                <label htmlFor="time" className="mb-2 block text-sm font-medium text-gray-700">
+                  Time
+                </label>
+                <div className="flex gap-2">
+                  <input
+                      type="text"
+                      name="time"
+                      placeholder="e.g. 3:30"
+                      value={newEvent.time.replace(/\s?(AM|PM)$/i, '')}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setNewEvent((prev) => ({
+                          ...prev,
+                          time: `${value} ${prev.time.includes('PM') ? 'PM' : 'AM'}`.trim(),
+                        }));
+                      }}
+                      className="w-full rounded-lg border border-gray-300 p-2.5 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  />
+                  <select
+                      name="amPm"
+                      value={newEvent.time.includes('PM') ? 'PM' : 'AM'}
+                      onChange={(e) => {
+                        const amPm = e.target.value;
+                        const timeOnly = newEvent.time.replace(/\s?(AM|PM)$/i, '');
+                        setNewEvent((prev) => ({
+                          ...prev,
+                          time: `${timeOnly} ${amPm}`,
+                        }));
+                      }}
+                      className="w-24 rounded-lg border border-gray-300 p-2.5 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  >
+                    <option value="AM">AM</option>
+                    <option value="PM">PM</option>
+                  </select>
+                </div>
+              </div>
+
               <div className="flex justify-end gap-2">
                 <button
-                  type="button"
-                  className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-                  onClick={handleCloseEventModal}
+                    type="button"
+                    className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                    onClick={handleCloseEventModal}
                 >
                   Cancel
                 </button>
                 <button
-                  type="submit"
-                  className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                    type="submit"
+                    className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
                 >
                   Save Event
                 </button>
@@ -397,27 +577,27 @@ export const ContinuousCalendar: React.FC<ContinuousCalendarProps> = ({ onClick 
           </div>
         </div>
       )}
-      
+
       {/* Todo List Modal */}
       {showTodoListModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-2xl/50">
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-xl font-semibold text-gray-900">
-                To-Do List - {selectedDate.toLocaleDateString('en-US', { 
-                  weekday: 'long', 
-                  month: 'long', 
-                  day: 'numeric', 
-                  year: 'numeric' 
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-2xl/50">
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="text-xl font-semibold text-gray-900">
+                  To-Do List - {selectedDate.toLocaleDateString('en-US', {
+                  weekday: 'long',
+                  month: 'long',
+                  day: 'numeric',
+                  year: 'numeric'
                 })}
-              </h3>
-              <button 
-                type="button" 
-                className="text-gray-400 hover:text-gray-500"
-                onClick={handleCloseTodoListModal}
-              >
-                <svg className="size-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+                </h3>
+                <button
+                    type="button"
+                    className="text-gray-400 hover:text-gray-500"
+                    onClick={handleCloseTodoListModal}
+                >
+                  <svg className="size-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
                 </svg>
               </button>
             </div>
@@ -430,12 +610,17 @@ export const ContinuousCalendar: React.FC<ContinuousCalendarProps> = ({ onClick 
                   {getEventsForDate(selectedDate.getDate(), selectedDate.getMonth()).map((event) => (
                     <li key={event.id} className="rounded-lg border border-gray-200 p-3">
                       <div className="flex items-center justify-between">
-                        <h5 className="font-medium text-gray-800">{event.title}</h5>
-                        <button 
-                          onClick={() => deleteEvent(event.id)}
-                          className="rounded-full p-1 text-red-500 hover:bg-red-50"
+                        <h5 className="font-medium text-gray-800">
+                          {event.title}
+                          <span className="ml-2 text-xs text-gray-500">({event.type})</span>
+                          {event.time && <span className="ml-1 text-xs text-blue-500">@ {event.time}</span>}
+                        </h5>
+
+                        <button
+                            onClick={() => deleteEvent(event.id)}
+                            className="rounded-full p-1 text-red-500 hover:bg-red-50"
                         >
-                          <svg className="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
                           </svg>
                         </button>

@@ -3,7 +3,7 @@ const bcrypt = require("bcrypt");
 const cors = require("cors");
 const session = require("express-session");
 const nodemailer = require("nodemailer");
-const { collection, userAuthCollection } = require("./config");
+const { collection, userAuthCollection, calendarTasks} = require("./config");
 require('dotenv').config();
 
 const app = express();
@@ -11,9 +11,13 @@ const PORT = 5000;
 
 // Middleware
 app.use(cors({
-  origin: "http://localhost:5173", // Vite default port
+  origin: "http://localhost:5176", // Vite default port
   credentials: true
 }));
+
+const cookieParser = require('cookie-parser');
+app.use(cookieParser());
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -85,7 +89,7 @@ app.post("/api/signup", async (req, res) => {
     const passcode = Math.floor(1000 + Math.random() * 9000); // 4-digit code
 
     await userAuthCollection.insertOne({
-      userID: userData.insertedId.toString(),
+      userID: userData._id.toString(),
       createdAt: new Date(),
       expiresAt: expiresAt,
       secretCode: passcode
@@ -98,7 +102,7 @@ app.post("/api/signup", async (req, res) => {
       success: true,
       message: "Registration successful",
       email: data.email,
-      userId: userData.insertedId.toString()
+      userId: userData._id.toString()
     });
   } catch (error) {
     console.error("Signup error:", error);
@@ -128,6 +132,14 @@ app.post("/api/login", async (req, res) => {
 
     // Check if account is verified
     if (user.verified) {
+      // Set cookie with user ID
+      res.cookie('userID', user._id.toString(), {
+        httpOnly: true,
+        sameSite: 'lax',
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 24 * 60 * 60 * 1000 // 24 hours
+      });
+
       return res.status(200).json({
         success: true,
         verified: true,
@@ -137,7 +149,9 @@ app.post("/api/login", async (req, res) => {
           email: user.email
         }
       });
+
     } else {
+
       // Account exists but is not verified - generate new OTP
       const passcode = Math.floor(1000 + Math.random() * 9000);
       
@@ -331,6 +345,52 @@ app.get("/api/auth-status", async (req, res) => {
     });
   } else {
     res.json({ isAuthenticated: false });
+  }
+});
+
+app.post('/api/tasks', async (req, res) => {
+  try {
+    const userID = req.cookies.userID;
+    const { name, description, type, time, date } = req.body;
+    if (!name || !date || !type) {
+      return res.status(400).json({ message: "Missing required task information" });
+    }
+
+    const newTask = {
+      userID,
+      name,
+      description: description || '',
+      type,
+      time: time || '',
+      date, // YYYY-MM-DD
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+
+    const result = await calendarTasks.insertOne(newTask);
+
+    res.status(201).json({
+      success: true,
+      message: 'Task saved successfully',
+      taskId: result.insertedId
+    });
+  } catch (error) {
+    console.error("Error saving task:", error);
+    res.status(500).json({ message: "Server error while saving task" });
+  }
+});
+
+app.get('/api/tasks', async (req, res) => {
+  try {
+    const userID = req.cookies.userID;
+    const { date } = req.query;
+
+    const tasks = await calendarTasks.find({ userID, date });
+
+    res.status(200).json({ success: true, tasks });
+  } catch (error) {
+    console.error("Error fetching tasks:", error);
+    res.status(500).json({ message: "Server error while fetching tasks" });
   }
 });
 

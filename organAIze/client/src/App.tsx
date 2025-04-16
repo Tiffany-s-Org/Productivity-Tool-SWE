@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import axios from 'axios';
 import LoginPage from './LoginPage';
 import RegisterPage from './RegisterPage';
 import OtpVerificationPage from './OtpVerificationPage';
 import HomePage from './HomePage';
 import ResetPasswordPage from './ResetPasswordPage';
 
-// Configure axios defaults
-axios.defaults.baseURL = 'http://localhost:5000/api';
-axios.defaults.withCredentials = true;
+import api from './axios-api';
+
+  // Configure axios defaults
+//axios.defaults.baseURL = 'http://localhost:5000/api';
+//axios.defaults.withCredentials = true;
 
 interface User {
   id: string;
@@ -45,7 +46,7 @@ const App: React.FC = () => {
 
   const handleLogin = async (username: string, password: string) => {
     try {
-      const response = await axios.post('/login', { username, password });
+      const response = await api.post('/login', { username, password });
       const { success, verified, user, email, userId, message } = response.data;
 
       if (success && verified) {
@@ -69,7 +70,7 @@ const App: React.FC = () => {
 
   const handleRegister = async (username: string, email: string, password: string) => {
     try {
-      const response = await axios.post('/signup', { username, email, password });
+      const response = await api.post('/signup', { username, email, password });
       const { success, message, email: userEmail, userId } = response.data;
       
       if (success) {
@@ -88,7 +89,7 @@ const App: React.FC = () => {
 
   const handleVerifyOtp = async (email: string, otp: string) => {
     try {
-      const response = await axios.post('/verify-otp', { email, otp });
+      const response = await api.post('/verify-otp', { email, otp });
       const { success, message, user } = response.data;
       
       if (success) {
@@ -110,7 +111,7 @@ const App: React.FC = () => {
 
   const handleResendOtp = async (email: string) => {
     try {
-      const response = await axios.post('/resend-otp', { email });
+      const response = await api.post('/resend-otp', { email });
       return { 
         success: response.data.success, 
         message: response.data.message 
@@ -126,7 +127,7 @@ const App: React.FC = () => {
 
   const handleResetPassword = async (email: string, newPassword: string, confirmPassword: string) => {
     try {
-      const response = await axios.post('/reset-password', { 
+      const response = await api.post('/reset-password', {
         email, 
         newPassword, 
         confirmPassword 

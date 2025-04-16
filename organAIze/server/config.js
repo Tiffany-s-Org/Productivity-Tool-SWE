@@ -27,6 +27,25 @@ const userAuthSchema = new mongoose.Schema({
 
 console.log("User Auth Schema active");
 
+//calendar-task schema
+const taskSchema = new mongoose.Schema({
+    userID: { type: String, required: true },
+    name: { type: String, required: true },
+    description: String,
+    type: {
+        type: String,
+        enum: ['homework', 'lecture/meetings', 'general', 'free time', 'other'],
+        required: true
+    },
+    time: String, // store as "3:00 PM"
+    date: { type: String, required: true }, // "YYYY-MM-DD"
+    createdAt: { type: Date, default: Date.now },
+    updatedAt: { type: Date, default: Date.now }
+});
+
+console.log("Calendar-task Schema active");
+
 const userAuthCollection = mongoose.model("userAuths", userAuthSchema);
 const collection = mongoose.model("users", loginSchema);
-module.exports = {collection, userAuthCollection};
+const calendarTasks = mongoose.model("tasks", taskSchema);
+module.exports = {collection, userAuthCollection, calendarTasks};
