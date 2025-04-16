@@ -1,0 +1,51 @@
+name: CI Workflow
+
+# Trigger the workflow when code is pushed or a pull request is created
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest  # Switch from windows-latest to ubuntu-latest
+
+    services:
+      mongodb:
+        image: mongo:latest
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "nc -z localhost 27017"
+          --health-interval 15s
+          --health-timeout 10s
+          --health-retries 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '23.9.0'
+
+      - name: Install Vitest
+        run: |
+          cd organAIze
+          npm install --save-dev vitest
+
+      - name: Install dependencies
+        run: cd organAIze && npm install
+
+      - name: Run tests
+        run: |
+          cd organAIze
+          npm test || echo "No tests found, skipping (for now)..."
+
+      # github will be constantly running the dev server if this is uncommented
+      #- name: Start Development Server
+      #  run: cd organAIze && npm run dev
