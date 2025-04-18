@@ -82,9 +82,9 @@ const OtpVerificationPage: React.FC<OtpVerificationPageProps> = ({ email, onVeri
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-100">
         <div className="w-full max-w-md rounded-lg bg-white p-8 shadow-lg">
-          <h2 className="mb-6 text-center text-2xl font-bold text-gray-800">Verify Your Account</h2>
+          <h2 className="mb-4 text-left text-3xl font-bold text-gray-800 mb-2">Email Verification</h2>
           
-          <div className="mb-6 text-center">
+          <div className="mb-6 text-left">
             <p className="text-gray-600">
               We've sent a verification code to:
             </p>
@@ -112,7 +112,7 @@ const OtpVerificationPage: React.FC<OtpVerificationPageProps> = ({ email, onVeri
                 id="otp"
                 type="text"
                 placeholder="Enter the 4-digit code"
-                className="mt-1 w-full rounded-lg border border-gray-300 p-3 text-center text-gray-700 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+                className="mt-2 w-full rounded-lg border border-gray-300 p-3 text-center text-gray-700 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
                 value={otp}
                 onChange={(e) => setOtp(e.target.value.replace(/[^0-9]/g, '').substring(0, 4))}
                 maxLength={4}
@@ -122,7 +122,7 @@ const OtpVerificationPage: React.FC<OtpVerificationPageProps> = ({ email, onVeri
             
             <button
               type="submit"
-              className={`w-full rounded-lg bg-[#041F41] px-4 py-3 text-white transition hover:bg-blue-980 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+              className={`mt-2 w-full rounded-lg bg-[#041F41] px-4 py-3 text-white transition hover:bg-blue-980 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
                 loading ? 'cursor-not-allowed opacity-70' : ''
               }`}
               disabled={loading}
