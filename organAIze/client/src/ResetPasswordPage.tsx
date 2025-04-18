@@ -69,7 +69,8 @@ const ResetPasswordPage: React.FC<ResetPasswordPageProps> = ({ onResetPassword }
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-100">
       <div className="w-full max-w-md rounded-lg bg-white p-8 shadow-lg">
-        <h2 className="mb-6 text-center text-2xl font-bold text-gray-800">Reset Password</h2>
+      <h2 className="text-left text-3xl font-bold text-gray-800 mb-2">Reset Password</h2>
+      <p className="mb-6 text-left text-gray-600">Please set your new password</p>
         
         {error && (
           <div className="mb-4 rounded-md bg-red-50 p-3 text-red-700">
@@ -92,7 +93,7 @@ const ResetPasswordPage: React.FC<ResetPasswordPageProps> = ({ onResetPassword }
               id="email"
               type="email"
               placeholder="Enter your email"
-              className="mt-1 w-full rounded-lg border border-gray-300 p-3 text-gray-700 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+              className="mt-2 w-full rounded-lg border border-gray-300 p-3 text-gray-700 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               disabled={loading}
@@ -107,7 +108,7 @@ const ResetPasswordPage: React.FC<ResetPasswordPageProps> = ({ onResetPassword }
               id="newPassword"
               type="password"
               placeholder="Enter new password"
-              className="mt-1 w-full rounded-lg border border-gray-300 p-3 text-gray-700 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+              className="mt-2 w-full rounded-lg border border-gray-300 p-3 text-gray-700 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               disabled={loading}
@@ -125,7 +126,7 @@ const ResetPasswordPage: React.FC<ResetPasswordPageProps> = ({ onResetPassword }
               id="confirmPassword"
               type="password"
               placeholder="Confirm new password"
-              className="mt-1 w-full rounded-lg border border-gray-300 p-3 text-gray-700 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+              className="mt-2 w-full rounded-lg border border-gray-300 p-3 text-gray-700 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               disabled={loading}
@@ -134,7 +135,7 @@ const ResetPasswordPage: React.FC<ResetPasswordPageProps> = ({ onResetPassword }
           
           <button
             type="submit"
-            className={`w-full rounded-lg bg-[#041F41] px-4 py-3 text-white transition hover:bg-blue-980 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+            className={`mt-4 w-full rounded-lg bg-[#041F41] px-4 py-3 text-white transition hover:bg-blue-980 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
               loading ? 'cursor-not-allowed opacity-70' : ''
             }`}
             disabled={loading}
