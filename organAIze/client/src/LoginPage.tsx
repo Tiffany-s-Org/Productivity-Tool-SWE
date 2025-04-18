@@ -88,7 +88,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
           
           <button
             type="submit"
-            className={`w-full rounded-lg bg-blue-600 px-4 py-3 text-white transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+            className={`w-full rounded-lg bg-[#041F41] px-4 py-3 text-white transition hover:bg-blue-980 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
               loading ? 'cursor-not-allowed opacity-70' : ''
             }`}
             disabled={loading}
