@@ -6,12 +6,14 @@ const nodemailer = require("nodemailer");
 const { collection, userAuthCollection, calendarTasks} = require("./config");
 require('dotenv').config();
 
+const mongoose = require("mongoose");
+
 const app = express();
 const PORT = 5000;
 
 // Middleware
 app.use(cors({
-  origin: "http://localhost:5176", // Vite default port
+  origin: "http://localhost:5173", // Vite default port
   credentials: true
 }));
 
@@ -391,6 +393,50 @@ app.get('/api/tasks', async (req, res) => {
   } catch (error) {
     console.error("Error fetching tasks:", error);
     res.status(500).json({ message: "Server error while fetching tasks" });
+  }
+});
+
+app.delete('/api/tasks/:taskId', async (req, res) => {
+  try {
+    const userID = req.cookies.userID;
+    const { taskId } = req.params;
+
+    // Check if task exists and belongs to the user
+    const task = await calendarTasks.findOne({
+      _id: new mongoose.Types.ObjectId(taskId),
+      userID: userID
+    });
+
+    if (!task) {
+      return res.status(404).json({
+        success: false,
+        message: "Task not found or you don't have permission to delete it"
+      });
+    }
+
+    // Delete the task
+    const result = await calendarTasks.deleteOne({
+      _id: new mongoose.Types.ObjectId(taskId),
+      userID: userID
+    });
+
+    if (result.deletedCount === 1) {
+      return res.status(200).json({
+        success: true,
+        message: "Task deleted successfully"
+      });
+    } else {
+      return res.status(400).json({
+        success: false,
+        message: "Failed to delete task"
+      });
+    }
+  } catch (error) {
+    console.error("Error deleting task:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while deleting task"
+    });
   }
 });
 
