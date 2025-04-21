@@ -209,9 +209,23 @@ export const ContinuousCalendar: React.FC<ContinuousCalendarProps> = ({ onClick 
     });
   };
 
-  const deleteEvent = (eventId: string) => {
-    setEvents(events.filter(event => event.id !== eventId));
+  const deleteEvent = async (eventID:string) => {
+    try {
+      const response = await api.delete(`/tasks/${eventID}`);
+
+      if (response.data.success) {
+        // Only update the UI if the server deletion was successful
+        setEvents(events.filter(event => event.id !== eventID));
+      } else {
+        console.error("Failed to delete task:", response.data.message);
+        alert("Failed to delete the task. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error deleting task:", error);
+      alert("An error occurred while deleting the task.");
+    }
   };
+
 
   const generateCalendar = useMemo(() => {
     const today = new Date();
@@ -360,14 +374,23 @@ export const ContinuousCalendar: React.FC<ContinuousCalendarProps> = ({ onClick 
             return aDate.getTime() - bDate.getTime();
           });
 
-          setEvents(fetchedEvents);
+          // First, remove any existing events for this date to avoid duplicates
+          const filteredEvents = events.filter(event => {
+            const eventDate = event.date;
+            return !(eventDate.getDate() === selectedDate.getDate() &&
+                eventDate.getMonth() === selectedDate.getMonth() &&
+                eventDate.getFullYear() === selectedDate.getFullYear());
+          });
+
+          // Then add the newly fetched events
+          setEvents([...filteredEvents, ...fetchedEvents]);
         }
       } catch (error) {
         console.error("Error fetching tasks:", error);
       }
     };
 
-    if (selectedDate) fetchTasks();
+    fetchTasks();
 
     const calendarContainer = document.querySelector('.calendar-container');
 
@@ -396,7 +419,54 @@ export const ContinuousCalendar: React.FC<ContinuousCalendarProps> = ({ onClick 
     return () => {
       observer.disconnect();
     };
-  }, [selectedDate]);
+  }, [selectedDate, showTodoListModal, showEventModal]);
+
+  // Add a new useEffect for initial loading of all events
+  useEffect(() => {
+    const fetchAllTasks = async () => {
+      try {
+        // Get current year's start and end dates
+        const yearStart = new Date(year, 0, 1).toISOString().split('T')[0];
+        const yearEnd = new Date(year, 11, 31).toISOString().split('T')[0];
+
+        const response = await api.get(`/tasks?start=${yearStart}&end=${yearEnd}`);
+
+        if (response.data.success) {
+          const fetchedEvents = response.data.tasks.map((task: any) => ({
+            id: task._id,
+            title: task.name,
+            description: task.description || '',
+            date: moment(task.date, 'YYYY-MM-DD').toDate(),
+            type: task.type,
+            time: task.time
+          }));
+
+          fetchedEvents.sort((a: Event, b: Event) => {
+            const aDate = a.date;
+            const bDate = b.date;
+
+            if (
+                aDate.getFullYear() === bDate.getFullYear() &&
+                aDate.getMonth() === bDate.getMonth() &&
+                aDate.getDate() === bDate.getDate()
+            ) {
+              const aTime = a.time ? moment(a.time, 'h:mm A') : moment('11:59 PM', 'h:mm A').add(1, 'minute');
+              const bTime = b.time ? moment(b.time, 'h:mm A') : moment('11:59 PM', 'h:mm A').add(1, 'minute');
+              return aTime.diff(bTime);
+            }
+
+            return aDate.getTime() - bDate.getTime();
+          });
+
+          setEvents(fetchedEvents);
+        }
+      } catch (error) {
+        console.error("Error fetching all tasks:", error);
+      }
+    };
+
+    fetchAllTasks();
+  }, [year]); // Re-fetch when year changes
 
   return (
     <div className="no-scrollbar calendar-container max-h-full overflow-y-scroll rounded-t-2xl bg-white pb-10 text-slate-800 shadow-xl">
