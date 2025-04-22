@@ -304,13 +304,13 @@ export const ContinuousCalendar: React.FC<ContinuousCalendarProps> = ({ onClick 
                             other: 'bg-purple-500',
                           };
 
-                          return (
+                          return ( 
                               <div
                                   key={event.id}
-                                  className={`flex items-center gap-1 rounded px-1 py-0.5 text-white ${colorMap[event.type]} bg-opacity-90`}
+                                  className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium text-white ${colorMap[event.type]}`}
                               >
-                                {event.time && <span className="font-mono">{event.time}</span>}
-                                <span className="truncate">{event.type}</span>
+                                {event.time && <span className="font-semibold">{event.time}</span>}
+                                <span className="font-normal truncate">{event.type}</span>
                               </div>
                           );
                         })}
