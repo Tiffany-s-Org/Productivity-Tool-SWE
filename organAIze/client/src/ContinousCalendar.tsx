@@ -209,9 +209,23 @@ export const ContinuousCalendar: React.FC<ContinuousCalendarProps> = ({ onClick 
     });
   };
 
-  const deleteEvent = (eventId: string) => {
-    setEvents(events.filter(event => event.id !== eventId));
+  const deleteEvent = async (eventID:string) => {
+    try {
+      const response = await api.delete(`/tasks/${eventID}`);
+
+      if (response.data.success) {
+        // Only update the UI if the server deletion was successful
+        setEvents(events.filter(event => event.id !== eventID));
+      } else {
+        console.error("Failed to delete task:", response.data.message);
+        alert("Failed to delete the task. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error deleting task:", error);
+      alert("An error occurred while deleting the task.");
+    }
   };
+
 
   const generateCalendar = useMemo(() => {
     const today = new Date();
@@ -277,7 +291,6 @@ export const ContinuousCalendar: React.FC<ContinuousCalendarProps> = ({ onClick 
                   {monthNames[month]}
                 </span>
               )}
-              
               {month >= 0 && getEventsForDate(day, month).length > 0 && (
                   <div className="absolute bottom-1.5 left-1 right-1 space-y-0.5 overflow-hidden px-1 text-[10px] sm:text-xs lg:text-sm">
                     {getEventsForDate(day, month)
@@ -294,10 +307,10 @@ export const ContinuousCalendar: React.FC<ContinuousCalendarProps> = ({ onClick 
                           return (
                               <div
                                   key={event.id}
-                                  className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium text-white ${colorMap[event.type]}`}
+                                  className={`flex items-center gap-1 rounded px-1 py-0.5 text-white ${colorMap[event.type]} bg-opacity-90`}
                               >
-                                {event.time && <span className="font-semibold">{event.time}</span>}
-                                <span className="font-normal truncate">{event.type}</span>
+                                {event.time && <span className="font-mono">{event.time}</span>}
+                                <span className="truncate">{event.type}</span>
                               </div>
                           );
                         })}
@@ -361,14 +374,23 @@ export const ContinuousCalendar: React.FC<ContinuousCalendarProps> = ({ onClick 
             return aDate.getTime() - bDate.getTime();
           });
 
-          setEvents(fetchedEvents);
+          // First, remove any existing events for this date to avoid duplicates
+          const filteredEvents = events.filter(event => {
+            const eventDate = event.date;
+            return !(eventDate.getDate() === selectedDate.getDate() &&
+                eventDate.getMonth() === selectedDate.getMonth() &&
+                eventDate.getFullYear() === selectedDate.getFullYear());
+          });
+
+          // Then add the newly fetched events
+          setEvents([...filteredEvents, ...fetchedEvents]);
         }
       } catch (error) {
         console.error("Error fetching tasks:", error);
       }
     };
 
-    if (selectedDate) fetchTasks();
+    fetchTasks();
 
     const calendarContainer = document.querySelector('.calendar-container');
 
@@ -397,7 +419,54 @@ export const ContinuousCalendar: React.FC<ContinuousCalendarProps> = ({ onClick 
     return () => {
       observer.disconnect();
     };
-  }, [selectedDate]);
+  }, [selectedDate, showTodoListModal, showEventModal]);
+
+  // Loads all events, probably fix later because redundant but works
+  useEffect(() => {
+    const fetchAllTasks = async () => {
+      try {
+        // Get current year's start and end dates
+        const yearStart = new Date(year, 0, 1).toISOString().split('T')[0];
+        const yearEnd = new Date(year, 11, 31).toISOString().split('T')[0];
+
+        const response = await api.get(`/tasks?start=${yearStart}&end=${yearEnd}`);
+
+        if (response.data.success) {
+          const fetchedEvents = response.data.tasks.map((task: any) => ({
+            id: task._id,
+            title: task.name,
+            description: task.description || '',
+            date: moment(task.date, 'YYYY-MM-DD').toDate(),
+            type: task.type,
+            time: task.time
+          }));
+
+          fetchedEvents.sort((a: Event, b: Event) => {
+            const aDate = a.date;
+            const bDate = b.date;
+
+            if (
+                aDate.getFullYear() === bDate.getFullYear() &&
+                aDate.getMonth() === bDate.getMonth() &&
+                aDate.getDate() === bDate.getDate()
+            ) {
+              const aTime = a.time ? moment(a.time, 'h:mm A') : moment('11:59 PM', 'h:mm A').add(1, 'minute');
+              const bTime = b.time ? moment(b.time, 'h:mm A') : moment('11:59 PM', 'h:mm A').add(1, 'minute');
+              return aTime.diff(bTime);
+            }
+
+            return aDate.getTime() - bDate.getTime();
+          });
+
+          setEvents(fetchedEvents);
+        }
+      } catch (error) {
+        console.error("Error fetching all tasks:", error);
+      }
+    };
+
+    fetchAllTasks();
+  }, [year]); // Re-fetch when year changes
 
   return (
     <div className="no-scrollbar calendar-container max-h-full overflow-y-scroll rounded-t-2xl bg-white pb-10 text-slate-800 shadow-xl">

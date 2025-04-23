@@ -22,7 +22,7 @@ const HomePage: React.FC<HomePageProps> = ({ user, onLogout }) => {
       {/* Header/Navigation */}
       <header className="bg-white shadow">
         <div className="mx-auto flex max-w-7xl items-center justify-between p-4">
-          <h1 className="text-xl font-bold text-gray-800">My App</h1>
+          <h1 className="text-xl font-bold text-gray-800">organAIze</h1>
           <div className="flex items-center gap-4">
             <span className="text-sm text-gray-600">
               Welcome, <span className="font-medium">{user?.username}</span>
@@ -62,10 +62,10 @@ const HomePage: React.FC<HomePageProps> = ({ user, onLogout }) => {
           
           {/* Calendar Section */}
           <div className="mb-8 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-            <h3 className="mb-4 text-xl font-medium text-gray-800">
+            <h3 className="mb-4 text-xl font-bold text-gray-800">
               Calendar
             </h3>
-            <div className="h-screen max-h-[600px]">
+            <div className="h-screen max-h-[750px]">
               <ContinuousCalendar onClick={handleDateClick} />
             </div>
           </div>
