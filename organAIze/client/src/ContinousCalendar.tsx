@@ -753,7 +753,7 @@ export const Select = ({ name, value, label, options = [], onChange, className }
       name={name}
       value={value}
       onChange={onChange}
-      className="cursor-pointer rounded-lg border border-gray-300 bg-white py-1.5 pl-2 pr-6 text-sm font-medium text-gray-900 hover:bg-gray-100 sm:rounded-xl sm:py-2.5 sm:pl-3 sm:pr-8"
+      className="appearance-none cursor-pointer rounded-lg border border-gray-300 bg-white py-1.5 pl-2 pr-6 text-sm font-medium text-gray-900 hover:bg-gray-100 sm:rounded-xl sm:py-2.5 sm:pl-3 sm:pr-8"
       required
     >
       {options.map((option) => (

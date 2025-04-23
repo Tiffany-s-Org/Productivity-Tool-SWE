@@ -22,7 +22,7 @@ const HomePage: React.FC<HomePageProps> = ({ user, onLogout }) => {
       {/* Header/Navigation */}
       <header className="bg-white shadow">
         <div className="mx-auto flex max-w-7xl items-center justify-between p-4">
-          <h1 className="text-xl font-bold text-gray-800">organAIze</h1>
+          <h1 className="text-2xl font-bold text-gray-800">organAIze</h1>
           <div className="flex items-center gap-4">
             <span className="text-sm text-gray-600">
               Welcome, <span className="font-medium">{user?.username}</span>
@@ -38,7 +38,7 @@ const HomePage: React.FC<HomePageProps> = ({ user, onLogout }) => {
       </header>
 
       {/* Main Content */}
-      <main className="mx-auto max-w-7xl p-6">
+      <main className="mx-auto max-w-screen-xl p-6">
         <div className="rounded-lg bg-white p-6 shadow">
           <h2 className="mb-4 text-2xl font-semibold text-gray-800">
             Welcome to the Dashboard
@@ -62,12 +62,21 @@ const HomePage: React.FC<HomePageProps> = ({ user, onLogout }) => {
           
           {/* Calendar Section */}
           <div className="mb-8 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-            <h3 className="mb-4 text-xl font-bold text-gray-800">
+            <h3 className="mb-2 text-2xl font-bold text-gray-800">
               Calendar
             </h3>
-            <div className="h-screen max-h-[750px]">
+            {/* <div className="h-screen max-h-[750px]">
               <ContinuousCalendar onClick={handleDateClick} />
+            </div> */}
+            {/* Calendar center aligned - Jimin */}
+            <div className="h-screen max-h-[850px] flex justify-center">
+              {/* w-fit will shrink-wrap the calendar to its intrinsic width */}
+              <div className="w-fit">
+                <ContinuousCalendar onClick={handleDateClick} />
+              </div>
             </div>
+
+
           </div>
           
           <p className="text-gray-600">
