@@ -22,7 +22,7 @@ const CalendarPage: React.FC<CalendarPageProps> = ({ onLogout }) => {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-gray-100">
       <h1 style={{ color: 'gray' }}>Calendar View</h1>
-      <h1 className="mb-4 text-3xl font-bold text-gray-700">📅 Calendar Page</h1>
+      <h1 className="mb-4 text-2xl font-bold text-gray-700">📅 Calendar Page</h1>
 
       {/* 🟥 Make all dates red using Tailwind */}
       <Calendar

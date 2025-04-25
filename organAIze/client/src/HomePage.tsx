@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { ContinuousCalendar } from './ContinousCalendar';
 
 interface User {
@@ -17,10 +17,13 @@ const HomePage: React.FC<HomePageProps> = ({ user, onLogout }) => {
     console.log(`Selected date: ${day}/${month + 1}/${year}`);
   };
 
+  // Scroll to top helper
+  const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
+
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="relative min-h-screen bg-[#F6F5F4]">
       {/* Header/Navigation */}
-      <header className="bg-white shadow px-6 py-6 relative">
+      <header className="bg-[#fdfdfd] shadow px-6 py-6 relative">
 
           <img
             src="/assets/organaize logo.png" 
@@ -35,7 +38,8 @@ const HomePage: React.FC<HomePageProps> = ({ user, onLogout }) => {
           
             <button
               onClick={onLogout}
-              className="rounded-lg bg-red-600 px-4 py-2 text-sm text-white transition hover:bg-red-700"
+              className="px-4 py-2 rounded-md border-2 border-red-600 font-semibold text-red-600 bg-transparent 
+             hover:bg-red-600 hover:text-white transition"
             >
               Logout
             </button>
@@ -49,7 +53,7 @@ const HomePage: React.FC<HomePageProps> = ({ user, onLogout }) => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
 
           {/* Left card: Greeting */}
-          <div className="rounded-2xl bg-white p-6 shadow-xl flex items-center hover-card hover:shadow-2xl transition">
+          <div className="rounded-2xl bg-[#fdfdfd] p-6 shadow-xl flex items-center hover-card hover:shadow-2xl transition">
             <h2 className="text-4xl pl-3 font-heading text-gray-800">
               
               <span className="font-medium">Welcome back,</span>
@@ -64,8 +68,8 @@ const HomePage: React.FC<HomePageProps> = ({ user, onLogout }) => {
           </div>
 
           {/* Right card: Account Info */}
-          <div className="rounded-2xl bg-blue-50 p-6 shadow-xl hover:shadow-2xl transition">
-            <h3 className="mb-4 text-lg font-bold text-blue-800">
+          <div className="rounded-2xl bg-[#277efd]/5 p-6 shadow-xl hover:shadow-2xl transition">
+            <h3 className="mb-4 text-2xl font-bold text-blue-900">
               Your Account Information
             </h3>
             <div className="space-y-2 text-gray-700">
@@ -86,8 +90,8 @@ const HomePage: React.FC<HomePageProps> = ({ user, onLogout }) => {
         </div>
 
         {/* Second row: Calendar */}
-        <div className="mt-8 rounded-2xl bg-white p-6 shadow-xl hover:shadow-2xl transition">
-          <h3 className="mb-4 text-2xl pl-2 font-bold text-gray-800">Calendar</h3>
+        <div className="mt-8 rounded-2xl bg-[#fdfdfd] p-6 shadow-xl hover:shadow-2xl transition">
+          <h3 className="mb-4 text-2xl pl-2 font-semibold text-gray-800">Calendar</h3>
           <div className="h-screen max-h-[750px] flex justify-center">
             <div className="w-fit">
               <ContinuousCalendar onClick={handleDateClick} />
@@ -119,7 +123,7 @@ const HomePage: React.FC<HomePageProps> = ({ user, onLogout }) => {
             ].map((item, index) => (
               <div
                 key={index}
-                className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm transition hover:shadow"
+                className="rounded-2xl border border-gray-200 bg-[#fdfdfd] p-4 shadow-sm transition hover:shadow"
               >
                 <h4 className="mb-2 text-lg font-medium text-gray-800">
                   {item.title}
@@ -130,6 +134,16 @@ const HomePage: React.FC<HomePageProps> = ({ user, onLogout }) => {
           </div>
         </div>
       </main>
+
+      {/* Scroll-to-Top Button */}
+      <button
+        onClick={scrollToTop}
+        className="fixed bottom-7 right-7 z-50 h-12 w-12 rounded-full bg-blue-500 font-semibold text-white 
+             flex items-center justify-center shadow-lg hover:bg-blue-600 transition"
+        aria-label="Scroll to top"
+      >
+        ↑
+      </button>
     </div>
   );
 };
