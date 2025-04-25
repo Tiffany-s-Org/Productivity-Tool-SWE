@@ -102,7 +102,7 @@ app.post("/api/signup", async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: "Registration successful",
+      message: "Registered successfully. Please log in now to continue.",
       email: data.email,
       userId: userData._id.toString()
     });
