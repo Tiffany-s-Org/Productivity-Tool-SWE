@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 interface RegisterPageProps {
   onRegister: (username: string, email: string, password: string) => Promise<{ success: boolean; message: string }>;
@@ -11,11 +11,15 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onRegister }) => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState(''); // <-- NEW
   const [loading, setLoading] = useState(false);
+
+  const navigate = useNavigate(); // <-- for optional redirect
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setSuccessMessage('');
     
     // Validation
     if (!username || !email || !password || !confirmPassword) {
@@ -28,14 +32,12 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onRegister }) => {
       return;
     }
     
-    // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       setError('Please enter a valid email address');
       return;
     }
     
-    // Password strength validation
     if (password.length < 8) {
       setError('Password must be at least 8 characters long');
       return;
@@ -44,10 +46,16 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onRegister }) => {
     setLoading(true);
     try {
       const result = await onRegister(username, email, password);
-      if (!result.success) {
+      if (result.success) {
+        setSuccessMessage('Registered successfully. Please log in now to continue.');
+        
+        // Optional: Redirect to login after 2 seconds
+        setTimeout(() => {
+          navigate('/');
+        }, 2000);
+      } else {
         setError(result.message);
       }
-      // If successful, App component will handle the navigation
     } catch (err) {
       setError('An unexpected error occurred');
       console.error(err);
@@ -65,6 +73,12 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onRegister }) => {
         {error && (
           <div className="mb-4 rounded-md bg-red-50 p-3 text-red-700">
             {error}
+          </div>
+        )}
+        
+        {successMessage && (
+          <div className="mb-4 rounded-md bg-green-50 p-3 text-green-700">
+            {successMessage}
           </div>
         )}
         
