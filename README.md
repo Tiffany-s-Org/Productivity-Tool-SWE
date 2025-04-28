@@ -8,7 +8,7 @@ Include:
 	Progress tracking (To-do, in progress, completed, archive)
 
 
-For college students who struggle to manage tasks and stay organized between academic and personal responsibilities, the Productivity Tool is a task management web application that helps users efficiently organize and prioritize their tasks to improve productivity. Unlike traditional to-do lists or manual planners, our product offers a dynamic, user-friendly interface that integrates task management, goal setting, and real-time progress tracking in one seamless platform.
+For college students who struggle to manage tasks and stay organized between academic and personal responsibilities, this productivity tool is a task management web application that helps users efficiently organize and prioritize their tasks to improve productivity. Unlike traditional to-do lists or manual planners, our product offers a dynamic, user-friendly interface that integrates task management, goal setting, and real-time progress tracking in one seamless platform.
 
 Our app will add events to the calendar and assign time slots for each assignment or event based on several factors like estimated time, due date, priority, and more. It’ll also automatically allot time for breaks so that students won’t forget to take a break. This will reduce burnout for students and help them finish assignments within the allotted time. 
 
