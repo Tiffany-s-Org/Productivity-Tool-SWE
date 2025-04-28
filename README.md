@@ -50,17 +50,12 @@ node server.js
 ### 7. Open a New Terminal
 - Open a second terminal window in VS Code (or your preferred editor).
 
-### 8. Navigate Back to the Frontend Directory
-```bash
-cd ..
-```
-
-### 9. Start the Frontend Development Server
+### 8. Start the Frontend Development Server
 ```bash
 npm run dev
 ```
 
-### 10. Access the App
+### 9. Access the App
 - Open your browser and go to [http://localhost:5173](http://localhost:5173) to use OrganAIze!
 
 ## Technologies Used
