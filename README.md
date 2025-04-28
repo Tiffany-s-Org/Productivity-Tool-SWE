@@ -45,7 +45,7 @@ npm install
 ```bash
 node server.js
 ```
-> ⚡ Note: Once the backend server is running, leave this terminal open as it will continue to run the backend.
+>  Note: Once the backend server is running, leave this terminal open as it will continue to run the backend.
 
 ### 7. Open a New Terminal
 - Open a second terminal window in VS Code (or your preferred editor).
