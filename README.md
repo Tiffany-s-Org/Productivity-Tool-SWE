@@ -18,7 +18,7 @@ Follow these steps to get OrganAIze running on your machine:
 
 ### 1. Clone the Repository
 ```bash
-git clone [your-repo-link]
+git clone https://github.com/Tiffany-s-Org/Productivity-Tool-SWE.git
 ```
 
 ### 2. Navigate to the Frontend Directory
